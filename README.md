@@ -10,3 +10,18 @@ How a funded pull request is checked:
    (overwriting anything the PR put in `acceptance/`), and runs one job per criterion: `acceptance (C1)`, `acceptance (C2)`, ...
 4. Milestone reads those checks, has an AI review only the criteria code can't test, and fixed rules decide
    whether the PayPal hold is captured and the worker paid.
+
+## Slugify
+
+`src/slugify.ts` exports `slugify(input: string): string`, which turns any string into a URL slug.
+
+```ts
+import { slugify } from "./src/slugify.ts";
+
+slugify("  Café München!! "); // "cafe-munchen"
+slugify("");                  // ""
+```
+
+Behaviour: lowercases and trims the input, transliterates common accents (`é` → `e`, `ü` → `u`),
+replaces every run of characters that aren't ASCII letters or digits with a single hyphen, strips
+leading and trailing hyphens, and returns an empty string for empty input.
