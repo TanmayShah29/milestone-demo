@@ -13,4 +13,15 @@ How a funded pull request is checked:
 
 ## Slugify
 
-Use `slugify()` from `src/slugify.ts`.
+`src/slugify.ts` exports `slugify(input: string): string`, which turns any string into a URL slug.
+
+```ts
+import { slugify } from "./src/slugify.ts";
+
+slugify("  Café München!! "); // "cafe-munchen"
+slugify("");                  // ""
+```
+
+Behaviour: lowercases and trims the input, transliterates common accents (`é` → `e`, `ü` → `u`),
+replaces every run of characters that aren't ASCII letters or digits with a single hyphen, strips
+leading and trailing hyphens, and returns an empty string for empty input.
