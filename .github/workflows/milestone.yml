@@ -1,0 +1,56 @@
+name: milestone
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+env:
+  MILESTONE_API: https://milestone-ai-escrow.onrender.com
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.c.outputs.matrix }}
+    steps:
+      # The base branch's helper script, never the PR's.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - id: c
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: node .github/milestone/contract.mjs matrix
+
+  acceptance:
+    needs: contract
+    if: needs.contract.outputs.matrix != '[]'
+    name: acceptance (${{ matrix.criterion }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        criterion: ${{ fromJSON(needs.contract.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: .base
+          sparse-checkout: .github/milestone
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - id: t
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: node .base/.github/milestone/contract.mjs write "${{ matrix.criterion }}"
+      - run: node --test "${{ steps.t.outputs.path }}"
