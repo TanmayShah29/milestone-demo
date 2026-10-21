@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.c.outputs.matrix }}
+      hash: ${{ steps.c.outputs.hash }}
     steps:
       # The base branch's helper script, never the PR's.
       - uses: actions/checkout@v4
@@ -31,8 +32,11 @@ jobs:
   acceptance:
     needs: contract
     if: needs.contract.outputs.matrix != '[]'
-    name: acceptance (${{ matrix.criterion }})
+    # The check-run name carries the full contract hash this job verified and ran, so Milestone can tell
+    # a run of the signed contract from a run of some other contract on the same commit.
+    name: acceptance (${{ matrix.criterion }}) terms ${{ needs.contract.outputs.hash }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -51,6 +55,8 @@ jobs:
           node-version: 22
       - id: t
         env:
-          PR_BODY: ${{ github.event.pull_request.body }}
+          MILESTONE_TERMS: ${{ needs.contract.outputs.hash }}
         run: node .base/.github/milestone/contract.mjs write "${{ matrix.criterion }}"
-      - run: node --test "${{ steps.t.outputs.path }}"
+      # Not `node --test`: it reports success when the code under test exits the process early.
+      # The base branch's harness checks that every signed test actually ran and passed.
+      - run: node .base/.github/milestone/run-tests.mjs "${{ steps.t.outputs.path }}"
