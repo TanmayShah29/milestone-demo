@@ -14,3 +14,13 @@ How a funded pull request is checked:
    signed test actually ran and passed: code that exits the process early, or stubs out `node:assert`, fails.
 4. Milestone reads those checks, has an AI review only the criteria code can't test, and fixed rules decide
    whether the PayPal hold is captured and the worker paid.
+
+## truncate
+
+```ts
+import { truncate } from "./src/truncate.ts";
+
+truncate("hello world", 5); // "hell…"
+truncate("hi", 10);         // "hi" (fits, unchanged)
+truncate("abc", 0);         // throws RangeError
+```
