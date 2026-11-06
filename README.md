@@ -14,3 +14,17 @@ How a funded pull request is checked:
    signed test actually ran and passed: code that exits the process early, or stubs out `node:assert`, fails.
 4. Milestone reads those checks, has an AI review only the criteria code can't test, and fixed rules decide
    whether the PayPal hold is captured and the worker paid.
+
+## wordCount
+
+`src/wordcount.ts` exports `wordCount(text: string): number`, which counts the words in a string.
+
+Words are separated by any whitespace (spaces, tabs, newlines). Leading and trailing whitespace is
+ignored, empty or whitespace-only input returns `0`, and a hyphenated word counts as one word.
+
+```ts
+import { wordCount } from "./src/wordcount.ts";
+
+wordCount("A well-known\texample\n"); // 3
+wordCount("   ");                     // 0
+```
